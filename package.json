@@ -1,0 +1,29 @@
+{
+  "name": "zo-bitop",
+  "version": "1.0.0",
+  "description": "Bit operations on large integer",
+  "main": "index.js",
+  "scripts": {
+    "test": "nyc --reporter=html --reporter=text mocha --slow=2000  test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zero0-1one/bitop.git"
+  },
+  "keywords": [
+    "bitwise",
+    "bit"
+  ],
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "nyc": "^15.0.0",
+    "zo-mocha-ext": "^1.0.3"
+  },
+  "author": "zero0-1one",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zero0-1one/bitop/issues"
+  },
+  "homepage": "https://github.com/zero0-1one/bitop#readme"
+}
