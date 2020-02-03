@@ -115,4 +115,6 @@ class LargeNumber {
   }
 }
 
-module.exports = LargeNumber
+module.exports = function(num) {
+  return new LargeNumber(num)
+}
