@@ -6,6 +6,38 @@ const MULT = 1 << LITTLE_BITS
 const MASK_0 = (1 << BIG_BITS) - 1
 const MASK_1 = (1 << LITTLE_BITS) - 1
 
+/**
+const COUNT_TABLE = []
+for (let i = 0 i < 256 i++) {
+    let count = 0
+    for (let j = 0 j < 8 j++) {
+        if (i & (1 << j)) {
+            count++
+        }
+    }
+    COUNT_TABLE[i] = count
+}
+*/
+const COUNT_TABLE = [
+  0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+  1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+  1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+  2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+  1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+  2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+  2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+  3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+  1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+  2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+  2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+  3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+  2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+  3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+  3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+  4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
+]
+
+
 class LargeNumber {
   constructor(num) {
     if (num instanceof LargeNumber) {
@@ -113,8 +145,17 @@ class LargeNumber {
     let num = new LargeNumber(this)
     return num.notSelf()
   }
+
+  _count(v) {
+    return COUNT_TABLE[v & 0xff] + COUNT_TABLE[(v >> 8) & 0xff] + COUNT_TABLE[(v >> 16) & 0xff] + COUNT_TABLE[(v >> 24) & 0xff]
+  }
+
+  //二进制位是1的位数
+  count() {
+    return this._count(this._val_0) + this._count(this._val_1)
+  }
 }
 
-module.exports = function(num) {
+module.exports = function (num) {
   return new LargeNumber(num)
 }

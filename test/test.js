@@ -25,8 +25,8 @@ const randomFunctions = [
 ]
 
 let N = 20000
-describe('config', function() {
-  its(N, 'constructor', function() {
+describe('config', function () {
+  its(N, 'constructor', function () {
     for (const func of randomFunctions) {
       let num = func()
       let lnum1 = new LargeNumber(num)
@@ -37,7 +37,7 @@ describe('config', function() {
     }
   })
 
-  its(N, 'val', function() {
+  its(N, 'val', function () {
     for (const func of randomFunctions) {
       let num = func()
       let lnum = new LargeNumber(num)
@@ -45,7 +45,7 @@ describe('config', function() {
     }
   })
 
-  its(N, '>>  and >>=', function() {
+  its(N, '>>  and >>=', function () {
     for (const func of randomFunctions) {
       let n = randomInt(0, 53)
       let num = func()
@@ -58,7 +58,7 @@ describe('config', function() {
     }
   })
 
-  its(N, '<< and <<=', function() {
+  its(N, '<< and <<=', function () {
     for (const func of randomFunctions) {
       let n = randomInt(0, 53)
       let num = func()
@@ -71,7 +71,7 @@ describe('config', function() {
     }
   })
 
-  its(N, '>>> and >>>=', function() {
+  its(N, '>>> and >>>=', function () {
     for (const func of randomFunctions) {
       let n = randomInt(0, 53)
       let num = func()
@@ -84,7 +84,7 @@ describe('config', function() {
     }
   })
 
-  its(N / 10, '| and |=', function() {
+  its(N / 10, '| and |=', function () {
     for (const func1 of randomFunctions) {
       for (const func2 of randomFunctions) {
         let num1 = func1()
@@ -112,7 +112,7 @@ describe('config', function() {
     }
   })
 
-  its(N / 10, '& and &=', function() {
+  its(N / 10, '& and &=', function () {
     for (const func1 of randomFunctions) {
       for (const func2 of randomFunctions) {
         let num1 = func1()
@@ -140,7 +140,7 @@ describe('config', function() {
     }
   })
 
-  its(N / 10, '^ and ^=', function() {
+  its(N / 10, '^ and ^=', function () {
     for (const func1 of randomFunctions) {
       for (const func2 of randomFunctions) {
         let num1 = func1()
@@ -167,7 +167,7 @@ describe('config', function() {
     }
   })
 
-  its(N, 'not and notSelf', function() {
+  its(N, 'not and notSelf', function () {
     for (const func1 of randomFunctions) {
       let num1 = func1()
 
@@ -184,4 +184,22 @@ describe('config', function() {
       assert.equal(binary, lnum1.binary(), `~${binary1}`)
     }
   })
+
+
+  its(N, 'count', function () {
+    for (const func1 of randomFunctions) {
+      let num1 = func1()
+
+      let binary1 = num1.toString(2).padStart(53, '0')
+
+      let lnum1 = new LargeNumber(num1)
+      let n = 0
+      for (let i = 0; i < 53; i++) {
+        if (binary1[i] == '1') n++
+      }
+
+      assert.equal(n, lnum1.count(), `count: ${binary1}`)
+    }
+  })
+
 })
