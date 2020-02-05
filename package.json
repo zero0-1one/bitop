@@ -1,6 +1,6 @@
 {
   "name": "zo-bitop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Bit operations on large integer",
   "main": "index.js",
   "scripts": {
