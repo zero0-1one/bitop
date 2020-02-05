@@ -1,10 +1,11 @@
 'use strict'
 
-const LITTLE_BITS = 27
-const BIG_BITS = 53 - LITTLE_BITS //必须比LITTLE_BITS小 (实现只考虑了小的情况)
-const MULT = 1 << LITTLE_BITS
-const MASK_0 = (1 << BIG_BITS) - 1
-const MASK_1 = (1 << LITTLE_BITS) - 1
+const BITS = 53
+const LOW_BITS = 28
+const HIGH_BITS = BITS - LOW_BITS //必须比LITTLE_BITS小 (因为位移算法实现中只考虑了小的情况)
+const MULT = 1 << LOW_BITS
+const MASK_HIGH = (1 << HIGH_BITS) - 1
+const MASK_LOW = (1 << LOW_BITS) - 1
 
 /**
 const COUNT_TABLE = []
@@ -41,8 +42,8 @@ const COUNT_TABLE = [
 class LargeNumber {
   constructor(num) {
     if (num instanceof LargeNumber) {
-      this._val_0 = num._val_0
-      this._val_1 = num._val_1
+      this._high = num._high
+      this._low = num._low
       return
     }
     /* istanbul ignore if */
@@ -50,38 +51,38 @@ class LargeNumber {
     /* istanbul ignore if */
     if (!Number.isSafeInteger(num)) throw new Error('Number is not a safe integer :' + num)
 
-    //分成两个30位, 其实只会用 53位
-    this._val_0 = Math.floor(num / MULT)
-    this._val_1 = num % MULT
+    //分成高低两份 其实只会用 53位
+    this._high = Math.floor(num / MULT)
+    this._low = num % MULT
   }
 
   get val() {
-    return this._val_0 * MULT + this._val_1 //每次计算完都使用了 MASK, 所以这里不用使用 MASK了
-    // return (this._val_0 & MASK_0) * MULT + (this._val_1 & MASK_1)
+    return this._high * MULT + this._low //每次计算完都使用了 MASK, 所以这里不用使用 MASK了
+    // return (this._high & MASK_HIGH) * MULT + (this._low & MASK_LOW)
   }
 
-  binary(len = 53) {
+  binary(len = BITS) {
     return this.val.toString(2).padStart(len, '0')
   }
 
   '<<='(n) {
-    if (n >= LITTLE_BITS) {
-      this._val_0 = (this._val_1 << (n - LITTLE_BITS)) & MASK_0
-      this._val_1 = 0
+    if (n >= LOW_BITS) {
+      this._high = (this._low << (n - LOW_BITS)) & MASK_HIGH
+      this._low = 0
     } else {
-      this._val_0 = ((this._val_0 << n) | (this._val_1 >> (LITTLE_BITS - n))) & MASK_0
-      this._val_1 = (this._val_1 << n) & MASK_1
+      this._high = ((this._high << n) | (this._low >> (LOW_BITS - n))) & MASK_HIGH
+      this._low = (this._low << n) & MASK_LOW
     }
     return this
   }
 
   '>>='(n) {
-    if (n >= LITTLE_BITS) {
-      this._val_1 = this._val_0 >> (n - LITTLE_BITS)
-      this._val_0 = 0
+    if (n >= LOW_BITS) {
+      this._low = this._high >> (n - LOW_BITS)
+      this._high = 0
     } else {
-      this._val_1 = ((this._val_0 << (LITTLE_BITS - n)) & MASK_1) | (this._val_1 >> n)
-      this._val_0 >>= n
+      this._low = ((this._high << (LOW_BITS - n)) & MASK_LOW) | (this._low >> n)
+      this._high >>= n
     }
     return this
   }
@@ -92,28 +93,28 @@ class LargeNumber {
 
   '&='(num) {
     if (!(num instanceof LargeNumber)) num = new LargeNumber(num)
-    this._val_0 &= num._val_0
-    this._val_1 &= num._val_1
+    this._high &= num._high
+    this._low &= num._low
     return this
   }
 
   '|='(num) {
     if (!(num instanceof LargeNumber)) num = new LargeNumber(num)
-    this._val_0 |= num._val_0
-    this._val_1 |= num._val_1
+    this._high |= num._high
+    this._low |= num._low
     return this
   }
 
   '^='(num) {
     if (!(num instanceof LargeNumber)) num = new LargeNumber(num)
-    this._val_0 ^= num._val_0
-    this._val_1 ^= num._val_1
+    this._high ^= num._high
+    this._low ^= num._low
     return this
   }
 
   notSelf() {
-    this._val_0 = ~this._val_0 & MASK_0
-    this._val_1 = ~this._val_1 & MASK_1
+    this._high = ~this._high & MASK_HIGH
+    this._low = ~this._low & MASK_LOW
     return this
   }
 
@@ -152,7 +153,25 @@ class LargeNumber {
 
   //二进制位是1的位数
   count() {
-    return this._count(this._val_0) + this._count(this._val_1)
+    return this._count(this._high) + this._count(this._low)
+  }
+
+  _slice(v, begin, end) {
+    let mask = ((1 << begin) - 1) ^ ((1 << end) - 1)
+    return (v & mask) >> begin
+  }
+
+  //从低位到高位  包含 begin 位,不包含 end 位
+  slice(begin, end) {
+    if (begin >= LOW_BITS) {
+      return this._slice(this._high, begin - LOW_BITS, end - LOW_BITS)
+    } else if (end <= LOW_BITS) {
+      return this._slice(this._low, begin, end)
+    } else {
+      let low = this._slice(this._low, begin, LOW_BITS)
+      let high = this._slice(this._high, 0, end - LOW_BITS)
+      return high * (1 << (LOW_BITS - begin)) + low  //不能直接用 high 位移, 此时可能会超出 2^32, 所以使用乘法
+    }
   }
 }
 

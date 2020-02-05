@@ -25,7 +25,7 @@ const randomFunctions = [
 ]
 
 let N = 20000
-describe('config', function () {
+describe('Large number bit operations ', function () {
   its(N, 'constructor', function () {
     for (const func of randomFunctions) {
       let num = func()
@@ -202,4 +202,19 @@ describe('config', function () {
     }
   })
 
+
+  its(N, 'slice', function () {
+    for (const func1 of randomFunctions) {
+      let num1 = func1()
+      let binary1 = num1.toString(2).padStart(53, '0')
+      let lnum1 = new LargeNumber(num1)
+      let range = [
+        [0, 0], [16, 16], [53, 53], [0, 5], [0, 53], [3, 18], [16, 48], [36, 49], [45, 53]
+      ]
+      for (const [begin, end] of range) {
+        let n = begin == end ? 0 : parseInt(binary1.slice(53 - end, 53 - begin), 2)
+        assert.equal(n, lnum1.slice(begin, end), `slice(${begin},${end}): ${binary1}`)
+      }
+    }
+  })
 })
