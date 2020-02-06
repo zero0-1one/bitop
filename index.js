@@ -39,9 +39,10 @@ const COUNT_TABLE = [
 ]
 
 
-class LargeNumber {
+// Large Number
+class LN {
   constructor(num) {
-    if (num instanceof LargeNumber) {
+    if (num instanceof LN) {
       this._high = num._high
       this._low = num._low
       return
@@ -92,21 +93,21 @@ class LargeNumber {
   }
 
   '&='(num) {
-    if (!(num instanceof LargeNumber)) num = new LargeNumber(num)
+    if (!(num instanceof LN)) num = new LN(num)
     this._high &= num._high
     this._low &= num._low
     return this
   }
 
   '|='(num) {
-    if (!(num instanceof LargeNumber)) num = new LargeNumber(num)
+    if (!(num instanceof LN)) num = new LN(num)
     this._high |= num._high
     this._low |= num._low
     return this
   }
 
   '^='(num) {
-    if (!(num instanceof LargeNumber)) num = new LargeNumber(num)
+    if (!(num instanceof LN)) num = new LN(num)
     this._high ^= num._high
     this._low ^= num._low
     return this
@@ -119,44 +120,44 @@ class LargeNumber {
   }
 
   '<<'(n) {
-    return new LargeNumber(this)['<<='](n)
+    return new LN(this)['<<='](n)
   }
 
   '>>'(n) {
-    return new LargeNumber(this)['>>='](n)
+    return new LN(this)['>>='](n)
   }
 
   '>>>'(n) {
-    return new LargeNumber(this)['>>>='](n)
+    return new LN(this)['>>>='](n)
   }
 
   '&'(num) {
-    return new LargeNumber(this)['&='](num)
+    return new LN(this)['&='](num)
   }
 
   '|'(num) {
-    return new LargeNumber(this)['|='](num)
+    return new LN(this)['|='](num)
   }
 
   '^'(num) {
-    return new LargeNumber(this)['^='](num)
+    return new LN(this)['^='](num)
   }
 
   not() {
-    let num = new LargeNumber(this)
+    let num = new LN(this)
     return num.notSelf()
   }
 
-  _count(v) {
+  static countS(v) {
     return COUNT_TABLE[v & 0xff] + COUNT_TABLE[(v >> 8) & 0xff] + COUNT_TABLE[(v >> 16) & 0xff] + COUNT_TABLE[(v >> 24) & 0xff]
   }
 
   //二进制位是1的位数
   count() {
-    return this._count(this._high) + this._count(this._low)
+    return LN.countS(this._high) + LN.countS(this._low)
   }
 
-  _slice(v, begin, end) {
+  static sliceS(v, begin, end) {
     let mask = ((1 << begin) - 1) ^ ((1 << end) - 1)
     return (v & mask) >> begin
   }
@@ -164,17 +165,39 @@ class LargeNumber {
   //从低位到高位  包含 begin 位,不包含 end 位
   slice(begin, end) {
     if (begin >= LOW_BITS) {
-      return this._slice(this._high, begin - LOW_BITS, end - LOW_BITS)
+      return LN.sliceS(this._high, begin - LOW_BITS, end - LOW_BITS)
     } else if (end <= LOW_BITS) {
-      return this._slice(this._low, begin, end)
+      return LN.sliceS(this._low, begin, end)
     } else {
-      let low = this._slice(this._low, begin, LOW_BITS)
-      let high = this._slice(this._high, 0, end - LOW_BITS)
+      let low = LN.sliceS(this._low, begin, LOW_BITS)
+      let high = LN.sliceS(this._high, 0, end - LOW_BITS)
       return high * (1 << (LOW_BITS - begin)) + low  //不能直接用 high 位移, 此时可能会超出 2^32, 所以使用乘法
     }
   }
 }
 
-module.exports = function (num) {
-  return new LargeNumber(num)
+
+
+
+let staticFunctions = ['countS', 'sliceS']
+let memberFunctions = ['not', 'count', 'slice']
+
+function LargeNumber(num, op, ...args) {
+  if (op === undefined) {
+    return new LN(num)
+  } else {
+    return new LN(num)[op](...args)
+  }
 }
+
+//导出工具函数
+for (const name of staticFunctions) {
+  LargeNumber[name] = LN[name]
+}
+for (const name of memberFunctions) {
+  LargeNumber[name] = function (num, ...args) {
+    return new LN(num)[name](...args)
+  }
+}
+
+module.exports = LargeNumber
